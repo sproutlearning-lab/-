@@ -58,8 +58,8 @@ button { font-family: inherit; cursor: pointer; }
     background: var(--board); border: 2px solid var(--board-b); border-radius: 20px;
     padding: 12px; display: grid; grid-template-columns: repeat(var(--cols, 6), 1fr); gap: 8px;
 }
-.board.c7 { gap: 6px; }
-.board.c7 .tile { font-size: clamp(17px, 5.4vw, 28px); border-radius: 10px; }
+.board.c8 { gap: 5px; padding: 10px; }
+.board.c8 .tile { font-size: clamp(16px, 4.8vw, 26px); border-radius: 9px; }
 .board.locked .tile { color: transparent; pointer-events: none; }
 .start-cover {
     position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
@@ -215,7 +215,7 @@ textarea.inp { min-height: 170px; border-width: 1px; border-color: #ddd; line-he
             <div class="size-seg" id="sizeSeg">
                 <button data-size="6x4">6×4</button>
                 <button data-size="6x6">6×6</button>
-                <button data-size="7x7">7×7</button>
+                <button data-size="8x6">8×6</button>
             </div>
         </div>
 
@@ -347,11 +347,11 @@ const GRADES = [
     ]}
 ];
 
-// 棋盘大小：7×7 共 49 格，放 24 个词（48 个字），最后留一个空格
+// 棋盘大小：列 × 行
 const SIZES = {
     '6x4': { cols: 6, words: 12 },
     '6x6': { cols: 6, words: 18 },
-    '7x7': { cols: 7, words: 24 }
+    '8x6': { cols: 8, words: 24 }
 };
 
 // ================= 本地存储（出错时静默降级） =================
@@ -494,7 +494,7 @@ function startLevel(id) {
     document.querySelectorAll('#sizeSeg button').forEach(b => b.classList.toggle('on', b.dataset.size === sizeKey));
     const board = $('board');
     board.style.setProperty('--cols', size.cols);
-    board.classList.toggle('c7', size.cols === 7);
+    board.classList.toggle('c8', size.cols === 8);
     board.classList.add('locked');
     board.innerHTML = '';
     state.tiles.forEach((t, i) => {
