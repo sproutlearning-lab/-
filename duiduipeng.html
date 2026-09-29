@@ -9,9 +9,9 @@
 :root {
     --orange: #f07f13;
     --orange-d: #d0600a;
-    --cream: #fbf6ea;
-    --board: #fdf0b8;
-    --board-b: #f3df8f;
+    --page: #eef7e8;
+    --board: #dcefd0;
+    --board-b: #bfdfab;
     --tile: #fffdf8;
     --tile-shadow: #e2d8c0;
     --ink: #2b2b2b;
@@ -24,7 +24,7 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body {
-    background: var(--cream);
+    background: var(--page);
     color: var(--ink);
     font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
     min-height: 100vh;
@@ -56,8 +56,27 @@ button { font-family: inherit; cursor: pointer; }
 .board-wrap { position: relative; }
 .board {
     background: var(--board); border: 2px solid var(--board-b); border-radius: 20px;
-    padding: 12px; display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+    padding: 12px; display: grid; grid-template-columns: repeat(var(--cols, 6), 1fr); gap: 8px;
 }
+.board.c7 { gap: 6px; }
+.board.c7 .tile { font-size: clamp(17px, 5.4vw, 28px); border-radius: 10px; }
+.board.locked .tile { color: transparent; pointer-events: none; }
+.start-cover {
+    position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    background: rgba(238, 247, 232, .55); border-radius: 20px;
+}
+.start-cover p { font-size: 15px; color: #3d6b2c; font-weight: 600; }
+.btn-start {
+    border: none; border-radius: 999px; padding: 16px 46px; font-size: 24px; font-weight: 800; letter-spacing: 4px;
+    color: #fff; background: linear-gradient(90deg, #f07f13, #e8590c); box-shadow: 0 5px 0 var(--orange-d), 0 10px 24px rgba(208, 96, 10, .3);
+}
+.btn-start:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--orange-d); }
+.size-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.size-row .lbl { font-size: 14px; color: #4a6b3c; font-weight: 600; }
+.size-seg { display: flex; gap: 4px; background: #d9ebcd; border-radius: 12px; padding: 4px; }
+.size-seg button { border: none; background: transparent; border-radius: 9px; padding: 7px 14px; font-size: 14px; font-weight: 700; color: #4a6b3c; }
+.size-seg button.on { background: #fff; color: var(--orange-d); box-shadow: 0 2px 6px rgba(60, 100, 40, .2); }
+.timer { font-size: 15px; font-weight: 700; color: #3d6b2c; font-variant-numeric: tabular-nums; }
 .tile {
     aspect-ratio: 1; background: var(--tile); border: none; border-radius: 12px;
     box-shadow: 0 4px 0 var(--tile-shadow), 0 6px 10px rgba(0, 0, 0, .05);
@@ -99,7 +118,7 @@ button { font-family: inherit; cursor: pointer; }
 .sel-head { text-align: center; margin: 6px 0 16px; }
 .sel-head .title { font-size: 32px; }
 .sel-head p { color: #666; margin-top: 6px; }
-.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: #efe9dc; border-radius: 14px; padding: 5px; margin-bottom: 16px; }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; background: #d9ebcd; border-radius: 14px; padding: 5px; margin-bottom: 16px; }
 .tab { border: none; background: transparent; border-radius: 10px; padding: 10px 2px; font-size: 14px; color: #555; font-weight: 600; }
 .tab.on { background: linear-gradient(90deg, #f59f00, #e8590c); color: #fff; box-shadow: 0 3px 8px rgba(232, 89, 12, .3); }
 .level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
@@ -142,6 +161,7 @@ textarea.inp { min-height: 170px; border-width: 1px; border-color: #ddd; line-he
 @keyframes rise { from { transform: translateY(20px) scale(.95); opacity: 0; } }
 .win-top { background: linear-gradient(135deg, #ff8a00, #ffc21a); text-align: center; padding: 24px 0 18px; }
 .win-top .party { font-size: 46px; }
+.win-time { font-size: 16px; font-weight: 700; color: #3d6b2c; margin: 2px 0 10px; }
 .win-top .big-stars { font-size: 30px; letter-spacing: 6px; margin-top: 8px; color: #fff; text-shadow: 0 2px 4px rgba(0, 0, 0, .15); }
 .modal-body { padding: 18px 20px 20px; text-align: center; }
 .modal-body h2 { font-size: 24px; }
@@ -182,16 +202,30 @@ textarea.inp { min-height: 170px; border-width: 1px; border-color: #ddd; line-he
             </div>
             <div class="top-right">
                 <div class="top-btns">
-                    <button class="btn-icon" id="soundBtn" title="朗读开关">🔊</button>
+                    <button class="btn-icon" id="soundBtn" title="音效开关">🔔</button>
                     <button class="btn-upload" id="uploadBtn">上传词库</button>
                 </div>
+                <div class="timer" id="timer">⏱ 00:00</div>
                 <div class="progress"><div class="bar"><i id="barFill"></i></div><span id="progressText">0/0</span></div>
+            </div>
+        </div>
+
+        <div class="size-row">
+            <span class="lbl">棋盘大小</span>
+            <div class="size-seg" id="sizeSeg">
+                <button data-size="6x4">6×4</button>
+                <button data-size="6x6">6×6</button>
+                <button data-size="7x7">7×7</button>
             </div>
         </div>
 
         <div class="board-wrap">
             <div class="board" id="board"></div>
             <div class="flash" id="flash"></div>
+            <div class="start-cover" id="startCover">
+                <button class="btn-start" id="startBtn">▶ 开始</button>
+                <p>点「开始」后开始计时</p>
+            </div>
         </div>
 
         <div class="controls">
@@ -200,7 +234,7 @@ textarea.inp { min-height: 170px; border-width: 1px; border-color: #ddd; line-he
             <button class="ctl yellow" id="selectBtn">选关</button>
         </div>
         <button class="row-link" id="bookBtn"><span>我的词语本</span><span>›</span></button>
-        <p class="tip">点两个字，能组成词语就消除！把所有字都消掉就过关啦。</p>
+        <p class="tip">先选棋盘大小，再点「开始」。点两个能组成词语的字就能消掉，全部消完就过关啦！</p>
     </section>
 
     <!-- 选关页 -->
@@ -259,6 +293,7 @@ textarea.inp { min-height: 170px; border-width: 1px; border-color: #ddd; line-he
         <div class="modal-body">
             <h2>太棒了！</h2>
             <p class="desc" id="winDesc">全部消除，过关！</p>
+            <div class="win-time" id="winTime"></div>
             <div class="chips" id="winWords"></div>
             <div class="modal-btns">
                 <button class="m-next" id="nextBtn">下一关</button>
@@ -287,31 +322,37 @@ textarea.inp { min-height: 170px; border-width: 1px; border-color: #ddd; line-he
 <div class="toast" id="toast"></div>
 
 <script>
-// ================= 内置关卡 =================
+// ================= 内置关卡（每关 24 个词，按棋盘大小随机抽取） =================
 const GRADES = [
     { name: '启蒙', levels: [
-        { name: '天地自然', words: '太阳 月亮 星星 白云 高山 河水 花朵 小草 大树 石头 雨点 土地' },
-        { name: '动物朋友', words: '老虎 熊猫 小猫 小狗 公鸡 鸭子 白兔 金鱼 大象 青蛙 蝴蝶 小鸟' },
-        { name: '我的家', words: '爸爸 妈妈 爷爷 奶奶 哥哥 妹妹 房间 桌子 椅子 窗户 门口 电视' },
-        { name: '我的身体', words: '眼睛 耳朵 鼻子 嘴巴 头发 手指 小脚 肚子 牙齿 眉毛 脸蛋 身体' },
-        { name: '好吃的', words: '苹果 香蕉 西瓜 葡萄 草莓 米饭 面条 鸡蛋 牛奶 面包 饺子 青菜' },
-        { name: '彩色世界', words: '红花 绿叶 蓝天 白雪 黄牛 黑板 紫色 金光 彩虹 灰狼 橙子 粉笔' }
+        { name: '天地自然', words: '太阳 月亮 星星 白云 高山 河水 花朵 小草 大树 石头 雨点 土地 天空 大海 小溪 沙子 田野 森林 风雨 雪花 树叶 果子 早晨 晚上' },
+        { name: '动物朋友', words: '老虎 熊猫 小猫 小狗 公鸡 鸭子 白兔 金鱼 大象 青蛙 蝴蝶 小鸟 狮子 猴子 小马 奶牛 山羊 松鼠 孔雀 企鹅 海豚 乌龟 蜜蜂 蚂蚁' },
+        { name: '我的家', words: '爸爸 妈妈 爷爷 奶奶 哥哥 妹妹 房间 桌子 椅子 窗户 门口 电视 姐姐 弟弟 厨房 客厅 沙发 冰箱 台灯 被子 枕头 牙刷 毛巾 镜子' },
+        { name: '我的身体', words: '眼睛 耳朵 鼻子 嘴巴 头发 手指 小脚 肚子 牙齿 眉毛 脸蛋 身体 舌头 脖子 肩膀 胳膊 手掌 膝盖 心脏 皮肤 骨头 指甲 额头 嗓子' },
+        { name: '好吃的', words: '苹果 香蕉 西瓜 葡萄 草莓 米饭 面条 鸡蛋 牛奶 面包 饺子 青菜 橘子 桃子 樱桃 菠萝 包子 馒头 豆腐 土豆 萝卜 番茄 蛋糕 果汁' },
+        { name: '彩色世界', words: '红花 绿叶 蓝天 白雪 黄牛 黑板 紫色 金光 彩虹 灰狼 橙子 粉笔 红旗 绿草 蓝色 白纸 黄瓜 黑夜 银河 金色 彩笔 灰尘 青草 紫菜' }
     ]},
     { name: '进阶', levels: [
-        { name: '四季变化', words: '春天 夏天 秋天 冬天 春风 夏雨 秋叶 冬雪 温暖 炎热 凉爽 寒冷 开花 结果 雪人' },
-        { name: '快乐校园', words: '学校 老师 同学 教室 书包 铅笔 作业 上课 下课 读书 写字 课本 操场 朋友 黑板' },
-        { name: '出门旅行', words: '汽车 火车 飞机 轮船 地铁 马路 红灯 绿灯 公交 司机 乘客 大桥 车站 出发 到达' },
-        { name: '各行各业', words: '医生 护士 警察 农民 工人 厨师 画家 歌手 军人 记者 演员 作家 律师 教师 园丁' },
-        { name: '每天做的事', words: '走路 跑步 跳高 唱歌 跳舞 画画 游泳 洗手 刷牙 睡觉 起床 吃饭 喝水 看书 玩耍' }
+        { name: '四季变化', words: '春天 夏天 秋天 冬天 春风 夏雨 秋叶 冬雪 温暖 炎热 凉爽 寒冷 开花 结果 雪人 春雨 夏日 秋风 冬眠 播种 收获 落叶 冰雪 季节' },
+        { name: '快乐校园', words: '学校 老师 同学 教室 书包 铅笔 作业 上课 下课 读书 写字 课本 操场 朋友 黑板 橡皮 尺子 本子 校园 同桌 班级 考试 放学 画笔' },
+        { name: '出门旅行', words: '汽车 火车 飞机 轮船 地铁 马路 红灯 绿灯 公交 司机 乘客 大桥 车站 出发 到达 高铁 行李 地图 机场 码头 门票 旅客 路口 船长' },
+        { name: '各行各业', words: '医生 护士 警察 农民 工人 厨师 画家 歌手 军人 记者 演员 作家 律师 教师 园丁 导游 保安 渔民 牧民 店员 法官 老板 裁缝 司机' },
+        { name: '每天做的事', words: '走路 跑步 跳高 唱歌 跳舞 画画 游泳 洗手 刷牙 睡觉 起床 吃饭 喝水 看书 玩耍 穿衣 洗澡 扫地 做饭 散步 写字 听歌 上学 回家' }
     ]},
     { name: '挑战', levels: [
-        { name: '我的心情', words: '高兴 快乐 难过 生气 害怕 开心 伤心 着急 骄傲 放松 害羞 惊讶 感谢 喜欢 讨厌 担心 满意 温柔' },
-        { name: '壮丽山河', words: '森林 草原 沙漠 海洋 湖泊 瀑布 山峰 岛屿 火山 冰川 河流 天空 彩虹 闪电 雷声 微风 细雨 阳光' },
-        { name: '传统节日', words: '春节 元宵 端午 中秋 重阳 清明 灯笼 月饼 粽子 鞭炮 团圆 对联 红包 龙舟 汤圆 烟花 饺子 拜年' },
-        { name: '好品质', words: '认真 仔细 努力 勤劳 诚实 勇敢 善良 礼貌 谦虚 节约 坚持 耐心 细心 友好 分享 帮助 爱护 珍惜' }
+        { name: '我的心情', words: '高兴 快乐 难过 生气 害怕 开心 伤心 着急 骄傲 放松 害羞 惊讶 感谢 喜欢 讨厌 担心 满意 温柔 平静 失望 感动 激动 委屈 幸福' },
+        { name: '壮丽山河', words: '森林 草原 沙漠 海洋 湖泊 瀑布 山峰 岛屿 火山 冰川 河流 天空 彩虹 闪电 雷声 微风 细雨 阳光 峡谷 平原 溪水 丘陵 高原 海浪' },
+        { name: '传统节日', words: '春节 元宵 端午 中秋 重阳 清明 灯笼 月饼 粽子 鞭炮 团圆 对联 红包 龙舟 汤圆 烟花 饺子 拜年 赏月 踏青 登高 春联 舞龙 庙会' },
+        { name: '好品质', words: '认真 仔细 努力 勤劳 诚实 勇敢 善良 礼貌 谦虚 节约 坚持 耐心 细心 友好 分享 帮助 爱护 珍惜 守时 自信 宽容 正直 负责 孝顺' }
     ]}
 ];
-const MAX_WORDS_PER_LEVEL = 18;
+
+// 棋盘大小：7×7 共 49 格，放 24 个词（48 个字），最后留一个空格
+const SIZES = {
+    '6x4': { cols: 6, words: 12 },
+    '6x6': { cols: 6, words: 18 },
+    '7x7': { cols: 7, words: 24 }
+};
 
 // ================= 本地存储（出错时静默降级） =================
 const store = {
@@ -322,19 +363,36 @@ const store = {
         try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* 忽略 */ }
     }
 };
-let progress = store.get('ddp_progress', {});   // { levelId: 最好星数 }
+let progress = store.get('ddp_progress', {});   // { "关卡id@棋盘": 最好星数 }
+let bestTimes = store.get('ddp_best', {});      // { "关卡id@棋盘": 最快秒数 }
 let wordbook = store.get('ddp_wordbook', {});   // { 词语: { n: 次数, t: 时间 } }
 let libs = store.get('ddp_libs', []);           // [{ id, name, words: [] }]
 let soundOn = store.get('ddp_sound', true);
+let sizeKey = SIZES[store.get('ddp_size', '6x4')] ? store.get('ddp_size', '6x4') : '6x4';
 
 const $ = id => document.getElementById(id);
+const wordsPerBoard = () => SIZES[sizeKey].words;
+const recordKey = id => `${id}@${sizeKey}`;
 
 // ================= 关卡工具 =================
-function splitGroups(words) {
-    const k = Math.max(1, Math.ceil(words.length / MAX_WORDS_PER_LEVEL));
-    const size = Math.ceil(words.length / k);
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// 按棋盘能放的词数把词库分组；最后一组不够时，从前面的词里补满
+function splitGroups(words, size) {
+    if (words.length <= size) return [words.slice()];
     const groups = [];
     for (let i = 0; i < words.length; i += size) groups.push(words.slice(i, i + size));
+    const last = groups[groups.length - 1];
+    if (last.length < size) {
+        const extra = shuffle(words.filter(w => !last.includes(w)));
+        groups[groups.length - 1] = last.concat(extra.slice(0, size - last.length));
+    }
     return groups;
 }
 
@@ -345,7 +403,7 @@ function getLevel(id) {
         const lv = GRADES[g] && GRADES[g].levels[i];
         if (!lv) return null;
         return {
-            id, words: lv.words.split(' '),
+            id, pool: lv.words.split(' '),
             label: `第${g + 1}级（${GRADES[g].name}）· 第${i + 1}关 · ${lv.name}`,
             next: GRADES[g].levels[i + 1] ? `b:${g}:${i + 1}` : (GRADES[g + 1] ? `b:${g + 1}:0` : null)
         };
@@ -353,10 +411,10 @@ function getLevel(id) {
     if (parts[0] === 'c') {
         const lib = libs.find(l => l.id === parts[1]);
         if (!lib) return null;
-        const groups = splitGroups(lib.words), k = +parts[2];
-        if (!groups[k]) return null;
+        const groups = splitGroups(lib.words, wordsPerBoard());
+        const k = Math.min(+parts[2] || 0, groups.length - 1);
         return {
-            id, words: groups[k],
+            id: `c:${lib.id}:${k}`, pool: groups[k],
             label: `我的字库 · ${lib.name}` + (groups.length > 1 ? ` · 第${k + 1}组` : ''),
             next: groups[k + 1] ? `c:${lib.id}:${k + 1}` : null
         };
@@ -364,38 +422,14 @@ function getLevel(id) {
     return null;
 }
 
-function shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-}
-
 function starText(n) { return '★'.repeat(n) + '☆'.repeat(3 - n); }
 
-// ================= 声音 =================
-let zhVoice = null;
-function pickVoice() {
-    try {
-        const vs = speechSynthesis.getVoices();
-        zhVoice = vs.find(v => /zh[-_]CN/i.test(v.lang)) || vs.find(v => /^zh/i.test(v.lang)) || null;
-    } catch (e) { zhVoice = null; }
-}
-if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-
-function speak(text) {
-    if (!soundOn || !('speechSynthesis' in window)) return;
-    try {
-        speechSynthesis.cancel();
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = 'zh-CN';
-        u.rate = 0.85;
-        if (zhVoice) u.voice = zhVoice;
-        speechSynthesis.speak(u);
-    } catch (e) { /* 忽略 */ }
+function formatTime(sec) {
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+// ================= 音效 =================
 let audioCtx = null;
 function beep(notes) {
     if (!soundOn) return;
@@ -420,7 +454,7 @@ const SFX = {
     win: () => beep([[523, .15], [659, .15], [784, .15], [1046, .35]])
 };
 
-function updateSoundBtn() { $('soundBtn').textContent = soundOn ? '🔊' : '🔇'; }
+function updateSoundBtn() { $('soundBtn').textContent = soundOn ? '🔔' : '🔕'; }
 
 // ================= 提示条 =================
 let toastTimer = null;
@@ -433,22 +467,35 @@ function toast(msg) {
 }
 
 // ================= 游戏逻辑 =================
-const state = { level: null, tiles: [], remaining: [], sel: null, mistakes: 0, hints: 0, total: 0, busy: false };
+const state = { level: null, words: [], tiles: [], remaining: [], sel: null, mistakes: 0, hints: 0, total: 0, busy: false, started: false, startAt: 0, elapsed: 0 };
+let timerId = null;
 
 function startLevel(id) {
     const level = getLevel(id) || getLevel('b:0:0');
+    const size = SIZES[sizeKey];
     state.level = level;
-    state.remaining = level.words.slice();
-    state.total = level.words.length;
-    state.tiles = shuffle(level.words.join('').split('')).map(ch => ({ ch, gone: false }));
+    state.words = shuffle(level.pool.slice()).slice(0, size.words);
+    state.remaining = state.words.slice();
+    state.total = state.words.length;
+    state.tiles = shuffle(state.words.join('').split('')).map(ch => ({ ch, gone: false }));
     state.sel = null;
     state.mistakes = 0;
     state.hints = 0;
     state.busy = false;
     store.set('ddp_last', level.id);
 
+    stopTimer();
+    state.started = false;
+    state.elapsed = 0;
+    updateTimer();
+    $('startCover').hidden = false;
+
     $('levelLabel').textContent = level.label;
+    document.querySelectorAll('#sizeSeg button').forEach(b => b.classList.toggle('on', b.dataset.size === sizeKey));
     const board = $('board');
+    board.style.setProperty('--cols', size.cols);
+    board.classList.toggle('c7', size.cols === 7);
+    board.classList.add('locked');
     board.innerHTML = '';
     state.tiles.forEach((t, i) => {
         const b = document.createElement('button');
@@ -460,6 +507,26 @@ function startLevel(id) {
     });
     updateProgress();
     showView('game');
+}
+
+function beginGame() {
+    if (state.started) return;
+    state.started = true;
+    state.startAt = Date.now();
+    $('startCover').hidden = true;
+    $('board').classList.remove('locked');
+    timerId = setInterval(updateTimer, 250);
+}
+
+function stopTimer() {
+    if (timerId) clearInterval(timerId);
+    timerId = null;
+    if (state.started) state.elapsed = Math.floor((Date.now() - state.startAt) / 1000);
+}
+
+function updateTimer() {
+    const sec = state.started && timerId ? Math.floor((Date.now() - state.startAt) / 1000) : state.elapsed;
+    $('timer').textContent = '⏱ ' + formatTime(sec);
 }
 
 function updateProgress() {
@@ -474,13 +541,12 @@ function clearHints() {
 
 function tapTile(i) {
     const t = state.tiles[i];
-    if (state.busy || t.gone) return;
+    if (state.busy || t.gone || !state.started) return;
     clearHints();
 
     if (state.sel === null) {
         state.sel = i;
         t.el.classList.add('sel');
-        speak(t.ch);
         return;
     }
     if (state.sel === i) {
@@ -502,12 +568,13 @@ function tapTile(i) {
         [first, t].forEach(x => x.el.classList.add('good'));
         setTimeout(() => [first, t].forEach(x => { x.el.classList.remove('good'); x.el.classList.add('gone'); }), 450);
         showFlash(word);
-        speak(word);
         SFX.good();
         addToWordbook(word);
         updateProgress();
         if (state.remaining.length === 0) {
             state.busy = true;
+            stopTimer();
+            updateTimer();
             setTimeout(showWin, 900);
         }
     } else {
@@ -533,6 +600,7 @@ function showFlash(word) {
 }
 
 function giveHint() {
+    if (!state.started) { toast('先点「开始」哦'); return; }
     if (state.busy || !state.remaining.length) return;
     clearHints();
     const alive = state.tiles.map((t, i) => i).filter(i => !state.tiles[i].gone);
@@ -565,25 +633,33 @@ function giveHint() {
 function showWin() {
     const penalty = state.mistakes + state.hints * 2;
     const stars = penalty <= 2 ? 3 : penalty <= 6 ? 2 : 1;
-    const id = state.level.id;
-    if (!progress[id] || progress[id] < stars) {
-        progress[id] = stars;
+    const key = recordKey(state.level.id);
+    if (!progress[key] || progress[key] < stars) {
+        progress[key] = stars;
         store.set('ddp_progress', progress);
     }
+    const prevBest = bestTimes[key];
+    const isRecord = prevBest === undefined || state.elapsed < prevBest;
+    if (isRecord) {
+        bestTimes[key] = state.elapsed;
+        store.set('ddp_best', bestTimes);
+    }
+    $('winTime').textContent = `⏱ 用时 ${formatTime(state.elapsed)}` +
+        (isRecord ? (prevBest === undefined ? '' : ' 🏆 新纪录！') : `（最快 ${formatTime(prevBest)}）`);
     $('winStars').textContent = starText(stars);
     $('winDesc').textContent = state.level.next
         ? `全部消除，过关！出错 ${state.mistakes} 次，提示 ${state.hints} 次`
         : '全部消除，你完成了这一组的所有关卡！';
     const box = $('winWords');
     box.innerHTML = '';
-    state.level.words.forEach(w => box.appendChild(makeChip(w)));
+    state.words.forEach(w => box.appendChild(makeChip(w)));
     $('nextBtn').hidden = !state.level.next;
     $('winMask').hidden = false;
     SFX.win();
 }
 
 function makeChip(word, count) {
-    const c = document.createElement('button');
+    const c = document.createElement('span');
     c.className = 'chip';
     c.textContent = word;
     if (count > 1) {
@@ -591,7 +667,6 @@ function makeChip(word, count) {
         s.textContent = '×' + count;
         c.appendChild(s);
     }
-    c.addEventListener('click', () => speak(word));
     return c;
 }
 
@@ -607,7 +682,7 @@ function addToWordbook(word) {
 function openBook() {
     const entries = Object.entries(wordbook).sort((a, b) => b[1].t - a[1].t);
     $('bookDesc').textContent = entries.length
-        ? `已经学会 ${entries.length} 个词语，点一点可以听读音`
+        ? `已经学会 ${entries.length} 个词语`
         : '还没有词语，快去玩一关吧！';
     const box = $('bookWords');
     box.innerHTML = '';
@@ -646,7 +721,7 @@ function setTab(tab) {
 function levelCard(id, no, name, count) {
     const b = document.createElement('button');
     b.className = 'level-card' + (state.level && state.level.id === id ? ' current' : '');
-    const s = progress[id] || 0;
+    const s = progress[recordKey(id)] || 0;
     b.innerHTML = '<div class="no"></div><div class="nm"></div><div class="meta"><span class="cnt"></span><span class="stars"></span></div>';
     b.querySelector('.no').textContent = no;
     b.querySelector('.nm').textContent = name;
@@ -660,7 +735,7 @@ function renderBuiltin(g) {
     const grid = $('levelGrid');
     grid.innerHTML = '';
     GRADES[g].levels.forEach((lv, i) => {
-        grid.appendChild(levelCard(`b:${g}:${i}`, `第${i + 1}关`, lv.name, lv.words.split(' ').length));
+        grid.appendChild(levelCard(`b:${g}:${i}`, `第${i + 1}关`, lv.name, Math.min(wordsPerBoard(), lv.words.split(' ').length)));
     });
 }
 
@@ -688,7 +763,7 @@ function renderLibs() {
         });
         const grid = document.createElement('div');
         grid.className = 'level-grid';
-        splitGroups(lib.words).forEach((words, k) => {
+        splitGroups(lib.words, wordsPerBoard()).forEach((words, k) => {
             grid.appendChild(levelCard(`c:${lib.id}:${k}`, `第${k + 1}组`, words.slice(0, 3).join(' ') + (words.length > 3 ? '…' : ''), words.length));
         });
         wrap.append(head, grid);
@@ -898,6 +973,13 @@ async function handleFile(file) {
 
 // ================= 事件绑定 =================
 $('hintBtn').addEventListener('click', giveHint);
+$('startBtn').addEventListener('click', beginGame);
+document.querySelectorAll('#sizeSeg button').forEach(b => b.addEventListener('click', () => {
+    if (b.dataset.size === sizeKey) return;
+    sizeKey = b.dataset.size;
+    store.set('ddp_size', sizeKey);
+    startLevel(state.level.id);
+}));
 $('restartBtn').addEventListener('click', () => startLevel(state.level.id));
 $('selectBtn').addEventListener('click', () => openSelect());
 $('uploadBtn').addEventListener('click', () => { openSelect('custom'); openCreate(true); });
@@ -910,7 +992,6 @@ $('soundBtn').addEventListener('click', () => {
     soundOn = !soundOn;
     store.set('ddp_sound', soundOn);
     updateSoundBtn();
-    if (!soundOn && 'speechSynthesis' in window) speechSynthesis.cancel();
 });
 
 $('nextBtn').addEventListener('click', () => { $('winMask').hidden = true; startLevel(state.level.next); });
